@@ -66,6 +66,8 @@ const ProjectApi = (app) => {
     router.put("/project/Employer/update/name_Overview", projectController.updateProjectWithEmployerOverview);
     router.post("/add/infomation/notification", projectController.addInfomationToNotification);
     router.get("/getNotification", projectController.showAllNotification);
+    router.put("/change/status/notification", projectController.changeStatusNotification);
+    router.put("/change/PassWord", projectController.changePassWord);
 
 
 

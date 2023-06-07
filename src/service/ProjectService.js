@@ -2,6 +2,9 @@ import { raw } from "body-parser"
 import db from "../models/index"
 import moment from "moment"
 import _, { includes } from "lodash"
+import bcrypt from "bcryptjs"
+
+var salt = bcrypt.genSaltSync(10);
 
 const getAllProject = async () => {
     try {
@@ -594,6 +597,10 @@ const getDataSearchWithtime = async (startDate, endDate) => {
                     model: db.Status_Delivery,
 
                 },
+                {
+                    model: db.Warehouse,
+
+                }
                 ]
 
 
@@ -734,10 +741,10 @@ const getAllProjectWithPaginationAndStatusPayment = async (page, limit, createBy
 }
 const getAllProjectWithPaginationAndStatusDeliveryNull = async (page, limit, createBy, statusdeliveryId) => {
     try {
-        if (statusdeliveryId >= 1) {
+        if (statusdeliveryId) {
             let offset = (page - 1) * limit;
             const { count, rows } = await db.Projects.findAndCountAll({
-                where: { createdBy: createBy, statusdeliveryId: statusdeliveryId },
+                where: { createdBy: createBy, statusdeliveryId: +statusdeliveryId },
 
                 include: [{
                     model: db.Status_Payment
@@ -1835,7 +1842,7 @@ const getAllProjectWithPaginationWithEmployer = async (page, limit, unit) => {
             let offset = (page - 1) * limit;;
 
             const { count, rows } = await db.Projects.findAndCountAll({
-                where: { shippingUnit_Id: +unit, flag: 0 },
+                where: { shippingUnit_Id: +unit },
                 include: [
                     {
                         model: db.Warehouse,
@@ -3298,7 +3305,9 @@ const showDataproductBySearchWithEmployer = async (data, positon, unit) => {
                     item?.User_Delivery?.includes(data) ||
                     item?.Number_Delivery?.includes(data) ||
                     item?.User_Overview?.includes(data) ||
-                    item?.Number_Overview?.includes(data)
+                    item?.Number_Overview?.includes(data) ||
+                    moment(`${item?.createdAt}`).format("DD/MM/YYYY ").includes(data)
+
 
 
 
@@ -3319,9 +3328,10 @@ const showDataproductBySearchWithEmployer = async (data, positon, unit) => {
                     item?.Address_Ward?.name?.includes(data) ||
                     item?.Address_District?.name?.includes(data) ||
                     item?.Address_Province?.name?.includes(data) ||
-                    moment(`${item?.createdAt}`).format("DD/MM/YYYY HH:mm:ss").includes(data) ||
+                    moment(`${item?.createdAt}`).format("DD/MM/YYYY ").includes(data) ||
                     moment(`${item?.pickup_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data) ||
                     moment(`${item?.pickupDone_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data)
+
                 )
                 return {
                     EM: " get data search success",
@@ -3335,6 +3345,7 @@ const showDataproductBySearchWithEmployer = async (data, positon, unit) => {
                     item?.Warehouse?.product?.includes(data) ||
                     item?.User_Warehouse?.includes(data) ||
                     item?.Number_Warehouse?.includes(data) ||
+                    moment(`${item?.createdAt}`).format("DD/MM/YYYY").includes(data) ||
                     moment(`${item?.warehouse_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data) ||
                     moment(`${item?.warehouseDone_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data)
                 )
@@ -3356,6 +3367,7 @@ const showDataproductBySearchWithEmployer = async (data, positon, unit) => {
                     item?.Ward_customer?.name?.includes(data) ||
                     item?.District_customer?.name?.includes(data) ||
                     item?.Province_customer?.name?.includes(data) ||
+                    moment(`${item?.createdAt}`).format("DD/MM/YYYY").includes(data) ||
                     moment(`${item?.Delivery_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data) ||
                     moment(`${item?.DeliveryDone_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data)
                 )
@@ -3377,6 +3389,7 @@ const showDataproductBySearchWithEmployer = async (data, positon, unit) => {
                     item?.User_Overview?.includes(data) ||
                     item?.Number_Overview?.includes(data) ||
                     item?.total?.includes(data) ||
+                    moment(`${item?.createdAt}`).format("DD/MM/YYYY").includes(data) ||
                     moment(`${item?.Overview_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data) ||
                     moment(`${item?.OverviewDone_time}`).format("DD/MM/YYYY HH:mm:ss").includes(data)
                 )
@@ -4061,6 +4074,117 @@ const getshowAllNotification = async (unit, user) => {
         }
     }
 }
+const updateStatusNotification = async (data) => {
+    try {
+        if (!data.id) {
+            return {
+                EM: "do not data to update",
+                EC: "1",
+                DT: "",
+            }
+        }
+        let Notification = await db.Notification.findOne({
+            where: { id: +data.id },
+        })
+        if (Notification) {
+            if (data.positon === "Customer") {
+                await Notification.update({
+                    ViewByuser: 1,
+                })
+                return {
+                    EM: " Update  Success",
+                    EC: "0",
+                    DT: "",
+                }
+            }
+            if (data.positon === "Staff") {
+                await Notification.update({
+                    ViewByStaff: 1,
+                })
+                return {
+                    EM: " Update  Success",
+                    EC: "0",
+                    DT: "",
+                }
+            }
+
+        } else {
+            return {
+                EM: "  Not Found",
+                EC: "2",
+                DT: "",
+            }
+
+        }
+    } catch (error) {
+        return {
+            EM: " Wrongs with services",
+            EC: "1",
+            DT: [],
+        }
+    }
+
+}
+const checkPassWord = (inputPassWord, hashPassWord) => {
+    return bcrypt.compareSync(inputPassWord, hashPassWord)
+}
+const hashPassWord = (passwordInput) => {
+    return bcrypt.hashSync(passwordInput, salt);
+}
+const UpdatePassWord = async (data) => {
+    try {
+        let user = await db.User.findOne({
+            where: { phone: data.phone }
+        })
+        if (user) {
+            let isCorrectPassword = checkPassWord(data.password, user.password)
+            if (isCorrectPassword == true) {
+                let hashPass = hashPassWord(data.newpassWord);
+                if (data.password === data.newpassWord) {
+                    return {
+                        EM: "The new password is the same as the password, please change it",
+                        EC: "0",
+                        DT: "",
+                    }
+                } else {
+                    await user.update({
+                        password: hashPass
+
+                    })
+                    return {
+                        EM: " Update  Success",
+                        EC: "0",
+                        DT: "",
+                    }
+                }
+
+            } else {
+                return {
+                    EM: "Wrong password , please check again",
+                    EC: "2",
+                    DT: "",
+                }
+            }
+        } else {
+            return {
+                EM: "  Not Found",
+                EC: "2",
+                DT: "",
+            }
+
+        }
+
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: " Wrongs with services",
+            EC: "1",
+            DT: [],
+        }
+    }
+
+}
+
 module.exports = {
     getAllProject, getAllProjectWithPagination, getProjects, createProjects, getSalesChannel, getAllStatusPayment,
     updateProjectWithId, RemoveProject, createChat, updateChat, RemoveChatProject, getDataSearch, getDataSearchWithtime,
@@ -4078,7 +4202,5 @@ module.exports = {
     updateProjectWithEmployerDelivery, getAllProjectWithEmployerWithAllStausPickUp, getAllProjectWithEmployerWithAllStausWarehouse,
     getAllProjectWithEmployerWithAllStausDelivery, getNumberEmployer, showDataproductBySearchWithEmployer, getDataproductWithStatus,
     getAllProjectWithPaginationWithEmployerOverview, createWarehouseProduct, getAllProjectWithPaginationWithEmployerOverviewWithUsername,
-    updateProjectWithEmployerOverview, createNotification, getshowAllNotification
+    updateProjectWithEmployerOverview, createNotification, getshowAllNotification, updateStatusNotification, UpdatePassWord
 }
-
-

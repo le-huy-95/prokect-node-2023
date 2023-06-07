@@ -54,7 +54,6 @@ const HandleRegister = async (req, res) => {
 const HandleLogin = async (req, res) => {
     try {
         let data = await authService.LoginUser(req.body);
-        console.log("req.body", req.body)
         //set cookie (khi login thanh cong va co token thi moi set cookie)
         if (data && data.DT && data.DT.access_token) {
             res.cookie("jwt", data.DT.access_token, {

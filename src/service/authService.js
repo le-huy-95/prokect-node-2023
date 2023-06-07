@@ -35,7 +35,6 @@ const checkPhone = async (userPhone) => {
 
 
 const regiterNewUser = async (userData) => {
-    console.log("userData", userData)
     try {
         let checkEmailExist = await checkEmail(userData.email)
         if (checkEmailExist === true) {

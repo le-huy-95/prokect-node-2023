@@ -1346,6 +1346,47 @@ const showAllNotification = async (req, res) => {
         })
     }
 }
+const changeStatusNotification = async (req, res) => {
+    try {
+
+
+        let data = await ProjectService.updateStatusNotification(req.body)
+        return res.status(200).json({
+            EM: data?.EM,
+            EC: data?.EC,
+            DT: data?.DT
+
+        })
+    } catch (error) {
+        console.log("error", error)
+        return res.status(500).json({
+            EM: "Error from Server",
+            EC: "-1",
+            DT: "",
+        })
+    }
+}
+
+const changePassWord = async (req, res) => {
+    try {
+
+
+        let data = await ProjectService.UpdatePassWord(req.body)
+        return res.status(200).json({
+            EM: data?.EM,
+            EC: data?.EC,
+            DT: data?.DT
+
+        })
+    } catch (error) {
+        console.log("error", error)
+        return res.status(500).json({
+            EM: "Error from Server",
+            EC: "-1",
+            DT: "",
+        })
+    }
+}
 module.exports = {
     showAllProject, showProject, addProjectToUser, showAllSaleChannel, showStatusPayment, updateProject, DeleteProject,
     createChatProject, updateChatProject, DeleteChatProject, showDataBySearch, showDataByTime, showAllProjectWithStatusPayment,
@@ -1359,5 +1400,6 @@ module.exports = {
     showAllProjectWithEmployerDelivery, showAllProjectWithEmployerDeliveryWithnameUser, updateProjectWithEmployerDelivery,
     showAllProjectWithEmployerWithAllStausPickUp, showAllProjectWithEmployerWithAllStausWarehouse, showAllProjectWithEmployerWithAllStausDelivery
     , showAllProjectWithEmployerWithAllNumber, showDataproductBySearchWithEmployer, showDataproductWithStatus, showAllProjectWithEmployerOverview,
-    createWarehouse, showAllProjectWithEmployerOverviewWithnameUser, updateProjectWithEmployerOverview, addInfomationToNotification, showAllNotification
+    createWarehouse, showAllProjectWithEmployerOverviewWithnameUser, updateProjectWithEmployerOverview, addInfomationToNotification, showAllNotification,
+    changeStatusNotification, changePassWord
 }
